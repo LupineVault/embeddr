@@ -438,25 +438,42 @@
         }
 
         function getUrlFromFragment() {
-            const fragment = window.location.hash.substring(1);
-            return fragment || null;
-        }
+    const fragment = window.location.hash.substring(1);
+    if (!fragment) return null;
 
-        function isValidUrl(string) {
-            if (!string) return false;
-            try {
-                const url = new URL(string);
-                return url.protocol === 'http:' || url.protocol === 'https:';
-            } catch (_) {
-                // Try with http:// prefix
-                try {
-                    const url = new URL(`http://${string}`);
-                    return url.hostname.includes('.');
-                } catch (_) {
-                    return false;
-                }
-            }
+    try {
+        // Decode if it's URL-encoded
+        const decoded = decodeURIComponent(fragment);
+        return decoded;
+    } catch (err) {
+        // Fallback if decoding fails
+        console.warn("Failed to decode fragment, using raw value:", err);
+        return fragment;
+    }
+}
+
+function isValidUrl(string) {
+    if (!string) return false;
+
+    // Decode before validation
+    try {
+        string = decodeURIComponent(string);
+    } catch (_) {}
+
+    try {
+        const url = new URL(string);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+        // Try adding http:// if missing
+        try {
+            const url = new URL(`http://${string}`);
+            return url.hostname.includes('.');
+        } catch (_) {
+            return false;
         }
+    }
+}
+
 
         function showError(message) {
             const loadingContainer = document.getElementById('loading-container');
